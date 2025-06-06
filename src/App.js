@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Check, Trash2, Star, Calendar, Filter, Search, Moon, Sun, Sparkles, Zap } from 'lucide-react';
+import { Plus, Check, Trash2, Star, Calendar, Filter, Search, Moon, Sun, Sparkles, Zap, AlertTriangle, X } from 'lucide-react';
 
 const App = () => {
   const [tasks, setTasks] = useState([
@@ -13,6 +13,7 @@ const App = () => {
   const [newTaskPriority, setNewTaskPriority] = useState('medium');
   const [newTaskCategory, setNewTaskCategory] = useState('personal');
   const [newTaskDate, setNewTaskDate] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, taskId: null, taskText: '' });
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -41,8 +42,19 @@ const App = () => {
     ));
   };
 
-  const deleteTask = (id) => {
-    setTasks(tasks.filter(task => task.id !== id));
+  const requestDeleteTask = (id, taskText) => {
+    setDeleteConfirmation({ show: true, taskId: id, taskText });
+  };
+
+  const confirmDeleteTask = () => {
+    if (deleteConfirmation.taskId) {
+      setTasks(tasks.filter(task => task.id !== deleteConfirmation.taskId));
+    }
+    setDeleteConfirmation({ show: false, taskId: null, taskText: '' });
+  };
+
+  const cancelDeleteTask = () => {
+    setDeleteConfirmation({ show: false, taskId: null, taskText: '' });
   };
 
   const getPriorityColor = (priority) => {
@@ -84,6 +96,76 @@ const App = () => {
 
   return (
     <div className={`min-h-screen transition-all duration-700 ${darkBg} relative overflow-hidden`}>
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmation.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+             style={{ animation: 'fadeIn 0.3s ease-out' }}>
+          <div className={`${cardBg} rounded-3xl p-8 border shadow-2xl max-w-md w-full mx-4 relative overflow-hidden`}
+               style={{
+                 transform: 'perspective(1000px) rotateX(5deg)',
+                 animation: 'slideInScale 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                 boxShadow: '0 25px 50px -12px rgba(239, 68, 68, 0.4)'
+               }}>
+            {/* Animated Background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-pink-500/10 to-orange-500/10 rounded-3xl"></div>
+            
+            <div className="relative text-center">
+              <div className="mb-6">
+                <div className="relative w-20 h-20 mx-auto mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse"></div>
+                  <div className="relative w-20 h-20 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl"
+                       style={{
+                         transform: 'perspective(500px) rotateX(10deg)',
+                         boxShadow: '0 15px 30px -5px rgba(239, 68, 68, 0.4)'
+                       }}>
+                    <AlertTriangle className="text-white w-10 h-10 animate-pulse" />
+                  </div>
+                </div>
+                <h3 className={`text-2xl font-bold mb-3 ${textPrimary}`}>
+                  Delete Task?
+                </h3>
+                <p className={`${textSecondary} text-lg mb-2`}>
+                  Are you sure you want to delete this task?
+                </p>
+                <div className={`${darkMode ? 'bg-slate-700/50' : 'bg-gray-100/80'} rounded-xl p-4 border-l-4 border-red-400`}>
+                  <p className={`${textPrimary} font-medium text-left`}>
+                    "{deleteConfirmation.taskText}"
+                  </p>
+                </div>
+                <p className={`${textSecondary} text-sm mt-3`}>
+                  This action cannot be undone.
+                </p>
+              </div>
+              
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={cancelDeleteTask}
+                  className={`px-6 py-3 rounded-xl border-2 ${darkMode ? 'border-slate-600 text-slate-300 hover:bg-slate-700/50' : 'border-gray-300 text-gray-600 hover:bg-gray-50'} transition-all duration-300 hover:scale-105 font-semibold flex items-center gap-2`}
+                  style={{
+                    transform: 'perspective(500px) rotateX(-5deg)',
+                    boxShadow: '0 5px 15px -5px rgba(0, 0, 0, 0.2)'
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteTask}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 transition-all duration-300 hover:scale-105 font-semibold flex items-center gap-2 shadow-lg hover:shadow-red-500/30"
+                  style={{
+                    transform: 'perspective(500px) rotateX(-5deg)',
+                    boxShadow: '0 10px 20px -5px rgba(239, 68, 68, 0.4)'
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Task
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 3D Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Floating 3D Orbs */}
@@ -388,7 +470,7 @@ const App = () => {
                   </div>
                   
                   <button
-                    onClick={() => deleteTask(task.id)}
+                    onClick={() => requestDeleteTask(task.id, task.text)}
                     className={`p-3 rounded-xl ${darkMode ? 'text-slate-400 hover:text-red-400 hover:bg-red-900/20' : 'text-gray-500 hover:text-red-500 hover:bg-red-50'} transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 transform-gpu`}
                     style={{
                       transform: 'perspective(500px) rotateY(15deg)',
@@ -437,6 +519,24 @@ const App = () => {
           to {
             opacity: 1;
             transform: perspective(1000px) translate3d(0, 0, 0) rotateX(-2deg);
+          }
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes slideInScale {
+          0% {
+            opacity: 0;
+            transform: perspective(1000px) scale(0.8) translate3d(0, 20px, 0) rotateX(10deg);
+          }
+          100% {
+            opacity: 1;
+            transform: perspective(1000px) scale(1) translate3d(0, 0, 0) rotateX(5deg);
           }
         }
       `}</style>
